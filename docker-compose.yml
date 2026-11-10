@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: baloncam-db
+    environment:
+      POSTGRES_DB: baloncam
+      POSTGRES_USER: baloncam_user
+      POSTGRES_PASSWORD: baloncam123
+    ports:
+      - "5432:5432"
+    volumes:
+      - baloncam_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U baloncam_user -d baloncam"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: baloncam-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/baloncam
+      SPRING_DATASOURCE_USERNAME: baloncam_user
+      SPRING_DATASOURCE_PASSWORD: baloncam123
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: baloncam-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+
+volumes:
+  baloncam_data:
