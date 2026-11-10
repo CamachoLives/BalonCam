@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: baloncam-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/baloncam
+    username: baloncam_user
+    password: baloncam123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+baloncam:
+  horario:
+    hora-inicio: 7
+    hora-fin: 24
+    duracion-slot-minutos: 60
+  bloqueo:
+    duracion-minutos: 5
+  cors:
+    allowed-origins: "http://localhost:4200"
