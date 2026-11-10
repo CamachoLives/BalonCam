@@ -3,18 +3,20 @@ package com.baloncam.features.cancha.service;
 import com.baloncam.features.cancha.entity.Cancha;
 import com.baloncam.features.cancha.entity.EstadoCancha;
 import com.baloncam.features.cancha.repository.CanchaRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CanchaService {
 
     private final CanchaRepository canchaRepository;
+
+    public CanchaService(CanchaRepository canchaRepository) {
+        this.canchaRepository = canchaRepository;
+    }
 
     public List<Cancha> listarTodas() {
         return canchaRepository.findByEstadoOrderByOrdenVisualAsc(EstadoCancha.ACTIVA);

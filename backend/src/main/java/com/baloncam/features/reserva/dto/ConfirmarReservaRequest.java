@@ -2,10 +2,7 @@ package com.baloncam.features.reserva.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import lombok.Data;
 
-@Data
 public class ConfirmarReservaRequest {
     @NotBlank
     private String token;
@@ -14,9 +11,17 @@ public class ConfirmarReservaRequest {
     private String nombre;
 
     @NotBlank
-    @Pattern(regexp = "^[+]?[(]?[0-9]{7,15}[)]?$", message = "Teléfono inválido")
     private String telefono;
 
     @Email
     private String email;
+
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }
