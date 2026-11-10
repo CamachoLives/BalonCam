@@ -1,0 +1,29 @@
+# Backend
+backend/target/
+backend/.mvn/
+backend/*.jar
+backend/*.war
+*.class
+*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.env
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
