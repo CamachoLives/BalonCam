@@ -17,6 +17,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     open-in-view: false
+    # Crea las tablas ANTES de ejecutar data.sql (sin esto falla el arranque con la base vacía)
+    defer-datasource-initialization: true
 
   sql:
     init:

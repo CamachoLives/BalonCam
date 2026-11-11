@@ -1,9 +1,9 @@
-import { Component, OnInit, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, state, style, animate, transition } from '@angular/animations';
 import { Cancha } from '../../../core/models/cancha.model';
 import { DisponibilidadSlot } from '../../../core/models/reserva.model';
 import { CanchaService } from '../../../core/services/cancha.service';
+import { hoyColombia, formatPesos } from '../../../core/utils/fecha';
 
 export interface CanchaConEstado {
   cancha: Cancha;
@@ -16,22 +16,8 @@ export interface CanchaConEstado {
   selector: 'app-campo-visual',
   standalone: true,
   imports: [CommonModule],
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.95)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'scale(1)' }))
-      ])
-    ]),
-    trigger('pulseGlow', [
-      state('disponible', style({ boxShadow: '0 0 20px rgba(52, 211, 153, 0.4)' })),
-      state('ocupada', style({ boxShadow: '0 0 15px rgba(251, 146, 60, 0.3)' })),
-      state('inactiva', style({ boxShadow: 'none' })),
-      transition('* => *', animate('500ms ease'))
-    ])
-  ],
   template: `
-    <div class="relative w-full" [@fadeIn]>
+    <div class="relative w-full" data-anim="fadeIn">
       <!-- Leyenda -->
       <div class="flex flex-wrap gap-4 mb-6 justify-center">
         <div class="flex items-center gap-2">
@@ -54,8 +40,8 @@ export interface CanchaConEstado {
 
       <!-- Campo principal: Fútbol 11 -->
       @if (canchaPrincipal()) {
-        <div class="relative w-full rounded-2xl overflow-hidden shadow-2xl"
-             style="aspect-ratio: 1.9/1; min-height: 240px;">
+        <div class="relative w-full rounded-2xl overflow-hidden shadow-2xl aspect-[3/4] sm:aspect-[1.9/1]"
+             style="min-height: 240px;">
 
           <!-- Grass background con líneas del campo -->
           <div class="campo-grass absolute inset-0 flex items-center justify-center">
@@ -80,7 +66,7 @@ export interface CanchaConEstado {
               <p class="text-white/90 text-xs font-semibold uppercase tracking-wider">
                 {{ canchaPrincipal()!.nombre }}
               </p>
-              <p class="text-emerald-400 text-xs">Fútbol 11 · {{ canchaPrincipal()!.precioPorHora | currency:'COP':'symbol':'1.0-0' }}/hr</p>
+              <p class="text-emerald-400 text-xs">Fútbol 11 · {{ pesos(canchaPrincipal()!.precioPorHora) }}/hr</p>
             </div>
 
             <!-- Overlay de estado del campo grande si no hay subcanchas -->
@@ -98,10 +84,9 @@ export interface CanchaConEstado {
 
             <!-- Subcanchas de fútbol 5 (divididas horizontalmente) -->
             @if (tieneSubcanchas()) {
-              <div class="absolute inset-0 flex flex-col sm:flex-row gap-1 p-2 z-10">
+              <div class="absolute inset-0 flex flex-col sm:flex-row gap-2 p-2 pt-16 sm:pt-14 z-10">
                 @for (item of subcanchasConEstado(); track item.cancha.id) {
                   <div class="flex-1 rounded-xl cursor-pointer transition-all duration-300 relative overflow-hidden group border-2"
-                       [@pulseGlow]="item.estadoGeneral"
                        [class]="getClaseSubcancha(item)"
                        (click)="seleccionarSubcancha(item)"
                        (mouseenter)="hoveredCancha = item.cancha.id"
@@ -124,13 +109,13 @@ export interface CanchaConEstado {
                         {{ getTextoEstadoSubcancha(item) }}
                       </div>
                       <p class="text-white/60 text-xs mt-1">
-                        {{ item.cancha.precioPorHora | currency:'COP':'symbol':'1.0-0' }}/hr
+                        {{ pesos(item.cancha.precioPorHora) }}/hr
                       </p>
                     </div>
 
                     <!-- Hover effect -->
                     @if (hoveredCancha === item.cancha.id && item.estadoGeneral !== 'inactiva') {
-                      <div class="absolute inset-0 bg-white/10 flex items-end justify-center pb-3" [@fadeIn]>
+                      <div class="absolute inset-0 bg-white/10 flex items-end justify-center pb-3 pointer-events-none" data-anim="fadeIn">
                         <span class="text-white text-xs font-medium bg-black/40 px-3 py-1 rounded-full">
                           Ver horarios →
                         </span>
@@ -142,6 +127,27 @@ export interface CanchaConEstado {
             }
           </div>
         </div>
+
+        <!-- Reservar el campo completo (ocupa el espacio de las canchas pequeñas) -->
+        @if (tieneSubcanchas()) {
+          <button type="button"
+                  class="mt-3 w-full card py-4 flex items-center justify-between gap-3 text-left transition-all duration-200"
+                  [class]="principalLibres() > 0 ? 'hover:border-purple-400/60 hover:bg-purple-500/10 cursor-pointer' : 'opacity-60 cursor-not-allowed'"
+                  [disabled]="principalLibres() === 0 || canchaPrincipal()!.estado !== 'ACTIVA'"
+                  (click)="seleccionarCanchaGrande()">
+            <span class="flex items-center gap-3">
+              <span class="text-2xl">🏟️</span>
+              <span>
+                <span class="block text-white font-semibold">Reservar la cancha completa</span>
+                <span class="block text-white/50 text-sm">Fútbol 11 · une las 3 canchas · {{ pesos(canchaPrincipal()!.precioPorHora) }}/hr</span>
+              </span>
+            </span>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0"
+                  [class]="principalLibres() > 0 ? 'bg-purple-500 text-white' : 'bg-gray-600 text-gray-300'">
+              {{ principalLibres() > 0 ? principalLibres() + ' horarios libres' : 'Sin horarios' }}
+            </span>
+          </button>
+        }
       }
 
       <!-- Loading state -->
@@ -168,8 +174,8 @@ export interface CanchaConEstado {
     </div>
   `,
 })
-export class CampoVisualComponent implements OnInit {
-  @Input() fecha: string = new Date().toISOString().split('T')[0];
+export class CampoVisualComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() fecha: string = hoyColombia();
   @Output() canchaSeleccionada = new EventEmitter<{ cancha: Cancha; fecha: string }>();
 
   private canchaService = inject(CanchaService);
@@ -194,9 +200,29 @@ export class CampoVisualComponent implements OnInit {
     });
   });
 
+  principalLibres = computed(() => {
+    const p = this.canchaPrincipal();
+    if (!p) return 0;
+    return (this.disponibilidad()[p.id] ?? []).filter(s => s.estado === 'DISPONIBLE').length;
+  });
+
+  private refresco: ReturnType<typeof setInterval> | null = null;
+
   ngOnInit() {
     this.cargar();
+    // "Tiempo real": refresca la disponibilidad cada 30 segundos.
+    this.refresco = setInterval(() => this.cargarDisponibilidad(), 30_000);
   }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['fecha'] && !changes['fecha'].firstChange) this.cargarDisponibilidad();
+  }
+
+  ngOnDestroy() {
+    if (this.refresco) clearInterval(this.refresco);
+  }
+
+  pesos(v?: number | null) { return formatPesos(v); }
 
   cargar() {
     this.error.set(null);
@@ -206,7 +232,7 @@ export class CampoVisualComponent implements OnInit {
         this.cargarDisponibilidad();
       },
       error: (err) => {
-        this.error.set('No se pudo conectar con el servidor. ¿Está el backend corriendo?');
+        this.error.set('No se pudo cargar la disponibilidad. Revisa tu conexión e intenta de nuevo.');
         console.error(err);
       }
     });
@@ -222,10 +248,11 @@ export class CampoVisualComponent implements OnInit {
   private calcularEstadoGeneral(slots: DisponibilidadSlot[], estado: string): CanchaConEstado['estadoGeneral'] {
     if (estado !== 'ACTIVA') return 'inactiva';
     if (slots.length === 0) return 'disponible';
-    const disponibles = slots.filter(s => s.estado === 'DISPONIBLE').length;
-    const total = slots.length;
+    // Las horas que ya pasaron no cuentan: solo importa lo que aún se puede reservar.
+    const vigentes = slots.filter(s => s.estado !== 'PASADO');
+    const disponibles = vigentes.filter(s => s.estado === 'DISPONIBLE').length;
     if (disponibles === 0) return 'ocupada';
-    if (disponibles < total) return 'parcial';
+    if (vigentes.some(s => s.estado === 'OCUPADO' || s.estado === 'BLOQUEADO')) return 'parcial';
     return 'disponible';
   }
 
@@ -282,7 +309,7 @@ export class CampoVisualComponent implements OnInit {
   }
 
   seleccionarSubcancha(item: CanchaConEstado) {
-    if (item.estadoGeneral === 'inactiva') return;
+    if (item.estadoGeneral === 'inactiva' || item.estadoGeneral === 'ocupada') return;
     this.canchaSeleccionada.emit({ cancha: item.cancha, fecha: this.fecha });
   }
 

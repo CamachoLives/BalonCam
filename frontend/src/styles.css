@@ -95,3 +95,14 @@
     ),
     linear-gradient(135deg, #1a5c35 0%, #2d7a4f 50%, #1a5c35 100%);
 }
+
+/* Animaciones de entrada (CSS puro, sin @angular/animations) */
+[data-anim="fadeIn"] { animation: animFadeIn 0.3s ease-out both; }
+[data-anim="slideIn"] { animation: animSlideIn 0.3s ease-out both; }
+[data-anim="slideUp"] { animation: animSlideUp 0.5s 0.1s ease-out both; }
+[data-anim="popIn"] { animation: animPopIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+@keyframes animFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes animSlideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+@keyframes animSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+@keyframes animPopIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { [data-anim] { animation: none; } }

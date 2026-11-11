@@ -27,3 +27,8 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Cloudflare
+cloudflare/node_modules/
+cloudflare/.wrangler/
+cloudflare/.dev.vars

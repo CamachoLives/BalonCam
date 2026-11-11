@@ -4,7 +4,6 @@ import com.baloncam.features.cancha.entity.Cancha;
 import com.baloncam.features.cancha.service.CanchaService;
 import com.baloncam.features.reserva.dto.DisponibilidadDTO;
 import com.baloncam.features.reserva.service.ReservaService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +14,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/canchas")
-@RequiredArgsConstructor
 public class CanchaController {
 
     private final CanchaService canchaService;
     private final ReservaService reservaService;
+
+    public CanchaController(CanchaService canchaService, ReservaService reservaService) {
+        this.canchaService = canchaService;
+        this.reservaService = reservaService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Cancha>> listarTodas() {

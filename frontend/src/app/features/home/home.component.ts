@@ -1,22 +1,15 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { CampoVisualComponent } from '../campo/campo-visual/campo-visual.component';
 import { Cancha } from '../../core/models/cancha.model';
+import { ConfigService } from '../../core/services/config.service';
+import { hoyColombia, sumarDias } from '../../core/utils/fecha';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [CommonModule, CampoVisualComponent],
-  animations: [
-    trigger('slideUp', [
-      transition(':enter', [
-        style({ transform: 'translateY(30px)', opacity: 0 }),
-        animate('500ms 100ms ease-out', style({ transform: 'translateY(0)', opacity: 1 }))
-      ])
-    ])
-  ],
   template: `
     <div class="min-h-screen">
       <!-- Hero Section -->
@@ -29,7 +22,7 @@ import { Cancha } from '../../core/models/cancha.model';
 
         <div class="max-w-7xl mx-auto relative">
           <!-- Título hero -->
-          <div class="text-center mb-10" [@slideUp]>
+          <div class="text-center mb-10" data-anim="slideUp">
             <span class="inline-block bg-emerald-500/20 text-emerald-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-4 border border-emerald-500/30">
               ⚡ Reserva en segundos, sin llamadas
             </span>
@@ -55,8 +48,8 @@ import { Cancha } from '../../core/models/cancha.model';
 
           <!-- Stats rápidas -->
           <div class="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-10">
-            @for (stat of stats; track stat.label) {
-              <div class="card text-center py-4" [@slideUp]>
+            @for (stat of stats(); track stat.label) {
+              <div class="card text-center py-4" data-anim="slideUp">
                 <p class="text-2xl font-black text-emerald-400">{{ stat.value }}</p>
                 <p class="text-white/50 text-xs mt-0.5">{{ stat.label }}</p>
               </div>
@@ -72,6 +65,8 @@ import { Cancha } from '../../core/models/cancha.model';
                    class="input-field"
                    [value]="fechaSeleccionada()"
                    [min]="hoy"
+                   [max]="fechaMax()"
+                   aria-label="Fecha de la reserva"
                    (change)="cambiarFecha($event)" />
           </div>
 
@@ -79,7 +74,7 @@ import { Cancha } from '../../core/models/cancha.model';
           <div class="max-w-4xl mx-auto">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-bold text-white">Mapa de Canchas</h2>
-              <span class="text-white/40 text-sm">{{ fechaSeleccionada() | date:'EEEE d MMM':'':'es' }}</span>
+              <span class="text-white/40 text-sm capitalize">{{ fechaSeleccionada() | date:'EEEE d MMM':'':'es' }}</span>
             </div>
 
             <app-campo-visual
@@ -102,21 +97,32 @@ import { Cancha } from '../../core/models/cancha.model';
     </div>
   `,
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   private router = inject(Router);
+  private configService = inject(ConfigService);
 
-  fechaSeleccionada = signal<string>(new Date().toISOString().split('T')[0]);
-  hoy = new Date().toISOString().split('T')[0];
+  hoy = hoyColombia();
+  fechaSeleccionada = signal<string>(this.hoy);
+  config = this.configService.config;
 
-  stats = [
-    { value: '4', label: 'Canchas' },
-    { value: '17h', label: 'Horarios' },
-    { value: '5min', label: 'Reserva' },
-  ];
+  fechaMax = computed(() => sumarDias(this.hoy, this.config()?.diasAnticipacion ?? 30));
+  stats = computed(() => {
+    const c = this.config();
+    const horas = c ? c.horaFin - c.horaInicio : 17;
+    return [
+      { value: '24/7', label: 'Reservas en línea' },
+      { value: horas + 'h', label: 'Horario al día' },
+      { value: '3', label: 'Pasos para reservar' },
+    ];
+  });
+
+  ngOnInit() {
+    this.configService.cargar().subscribe({ error: () => {} });
+  }
 
   features = [
-    { icono: '🔒', titulo: 'Sin conflictos', desc: 'Sistema de bloqueo inteligente: solo el primero en reservar obtiene el slot.' },
-    { icono: '📱', titulo: 'Sin llamadas', desc: 'Todo desde tu teléfono o computador. Rápido y sin esperas.' },
+    { icono: '🔒', titulo: 'Sin cruces', desc: 'Cuando eliges un horario queda apartado para ti mientras confirmas. Nadie más lo puede tomar.' },
+    { icono: '💳', titulo: 'Paga como quieras', desc: 'En línea, por Nequi o al llegar a la cancha. Sin llamadas ni esperas.' },
     { icono: '✅', titulo: 'Confirmación inmediata', desc: 'Recibe tu código de reserva al instante para presentar en cancha.' },
   ];
 

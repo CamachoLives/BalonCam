@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/reservas/confirmar-reserva/confirmar-reserva.component').then(m => m.ConfirmarReservaComponent)
   },
   {
+    path: 'admin',
+    loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }
