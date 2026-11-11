@@ -1,0 +1,1 @@
+var a={EN_LINEA:{titulo:"Pagar en l\xEDnea",detalle:"Tarjeta, PSE o Nequi desde la pasarela de pago.",icono:"\u{1F4B3}"},NEQUI:{titulo:"Transferencia Nequi",detalle:"Transfieres y env\xEDas el comprobante por WhatsApp.",icono:"\u{1F4F2}"},EN_CANCHA:{titulo:"Pagar en la cancha",detalle:"Pagas al llegar, en efectivo o transferencia.",icono:"\u{1F4B5}"}};export{a};
