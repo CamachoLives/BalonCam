@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -312,10 +312,13 @@ export class BookingWizardComponent implements OnInit {
 
   private countdown: ReturnType<typeof setInterval> | null = null;
 
-  formularioValido = computed(() =>
-    this.form.nombre.trim().length >= 2 &&
-    this.form.telefono.trim().length >= 7
-  );
+  // form no es un signal (usa ngModel), así que se evalúa en cada detección de cambios
+  formularioValido(): boolean {
+    return (
+      this.form.nombre.trim().length >= 2 &&
+      this.form.telefono.trim().length >= 7
+    );
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

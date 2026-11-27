@@ -3,17 +3,19 @@ package com.baloncam.features.reserva.controller;
 import com.baloncam.features.reserva.dto.*;
 import com.baloncam.features.reserva.service.ReservaService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reservas")
-@RequiredArgsConstructor
 public class ReservaController {
 
     private final ReservaService reservaService;
+
+    public ReservaController(ReservaService reservaService) {
+        this.reservaService = reservaService;
+    }
 
     /** Paso 1: bloquear el slot y obtener token */
     @PostMapping("/bloquear")

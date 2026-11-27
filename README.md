@@ -66,7 +66,8 @@ ng serve
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/api/canchas` | Lista todas las canchas |
-| GET | `/api/disponibilidad?fecha=YYYY-MM-DD` | Disponibilidad del día |
+| GET | `/api/canchas/disponibilidad?fecha=YYYY-MM-DD` | Disponibilidad del día (todas las canchas) |
+| GET | `/api/canchas/{id}/disponibilidad?fecha=YYYY-MM-DD` | Disponibilidad del día de una cancha |
 | POST | `/api/reservas/bloquear` | Bloquea un slot (devuelve token) |
 | POST | `/api/reservas/confirmar` | Confirma reserva con token |
 | GET | `/api/reservas/{token}` | Consulta reserva por token |
